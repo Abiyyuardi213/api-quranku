@@ -21,6 +21,7 @@ class Ayat extends Model
         'ar',
         'tr',
         'idn',
+        'ayat_id_api',
     ];
 
     protected static function boot()

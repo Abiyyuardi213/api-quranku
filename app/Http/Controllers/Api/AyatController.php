@@ -114,7 +114,6 @@ class AyatController extends Controller
     {
         try {
             $url = "https://quran-api.santrikoding.com/api/surah/" . $nomor;
-
             $response = file_get_contents($url);
             $data = json_decode($response, true);
 
@@ -143,11 +142,11 @@ class AyatController extends Controller
                 Ayat::updateOrCreate(
                     ['ayat_id_api' => $ayatAPI['id']],
                     [
-                        'surah_id'     => $surah->id,
-                        'nomor_ayat'   => $ayatAPI['nomor'],
-                        'ar'           => $ayatAPI['ar'],
-                        'tr'           => $ayatAPI['tr'],
-                        'idn'          => $ayatAPI['idn']
+                        'surah_id'   => $surah->id,
+                        'nomor'      => $ayatAPI['nomor'],
+                        'ar'         => $ayatAPI['ar'],
+                        'tr'         => $ayatAPI['tr'],
+                        'idn'        => $ayatAPI['idn']
                     ]
                 );
             }
@@ -164,5 +163,25 @@ class AyatController extends Controller
                 'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function syncSemuaSurah()
+    {
+        $hasil = [];
+
+        for ($i = 8; $i <= 114; $i++) {
+            $response = $this->syncAyatSurah($i);
+            $hasil[] = [
+                'surah'  => $i,
+                'status' => $response->original['status'],
+                'message'=> $response->original['message']
+            ];
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Sinkronisasi surah 8–114 selesai',
+            'detail' => $hasil
+        ], 200);
     }
 }

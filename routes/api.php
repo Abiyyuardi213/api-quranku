@@ -25,3 +25,4 @@ Route::post('/ayat', [AyatController::class, 'store']);
 Route::put('/ayat/{id}', [AyatController::class,     'update']);
 Route::delete('/ayat/{id}', [AyatController::class, 'destroy']);
 Route::get('sync-ayat-surah/{nomor}', [AyatController::class, 'syncAyatSurah']);
+Route::get('/sync-ayat-semua', [AyatController::class, 'syncSemuaSurah']);
