@@ -28,10 +28,15 @@ class AyatController extends Controller
             ], 404);
         }
 
+        $ayat = Ayat::where('surah_id', $surah_id)
+                    ->orderBy('nomor', 'asc')
+                    ->get();
+
         return response()->json([
             'status' => true,
             'surah' => $surah->nama_latin,
-            'ayat' => Ayat::where('surah_id', $surah_id)->orderBy('nomor')->get()
+            'jumlah_ayat' => $ayat->count(),
+            'ayat' => $ayat
         ], 200);
     }
 
@@ -62,7 +67,9 @@ class AyatController extends Controller
             'idn' => 'required|string'
         ]);
 
-        $ayat = Ayat::create($request->all());
+        $ayat = Ayat::create($request->only([
+            'surah_id', 'nomor', 'ar', 'tr', 'idn'
+        ]));
 
         return response()->json([
             'status' => true,
@@ -82,7 +89,7 @@ class AyatController extends Controller
             ], 404);
         }
 
-        $ayat->update($request->all());
+        $ayat->update($request->only(['nomor', 'ar', 'tr', 'idn']));
 
         return response()->json([
             'status' => true,
@@ -110,17 +117,38 @@ class AyatController extends Controller
         ], 200);
     }
 
+    private function cleanTransliteration($text)
+    {
+        $text = str_replace(['\u003C', '\u003E'], ['<', '>'], $text);
+
+        $text = html_entity_decode($text, ENT_QUOTES, 'UTF-8');
+
+        $text = preg_replace('/<[^>]*>/', '', $text);
+
+        $text = preg_replace('/\s+/', ' ', trim($text));
+
+        return $text;
+    }
+
     public function syncAyatSurah($nomor)
     {
         try {
             $url = "https://quran-api.santrikoding.com/api/surah/" . $nomor;
             $response = file_get_contents($url);
-            $data = json_decode($response, true);
 
-            if (!$data || !$data['status']) {
+            if (!$response) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Gagal mengambil data dari API'
+                    'message' => 'Tidak dapat menghubungi API'
+                ], 500);
+            }
+
+            $data = json_decode($response, true);
+
+            if (!isset($data['nomor'])) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Format API tidak valid'
                 ], 500);
             }
 
@@ -137,16 +165,18 @@ class AyatController extends Controller
                 ]
             );
 
-            foreach ($data['ayat'] as $ayatAPI) {
+            foreach ($data['ayat'] as $a) {
+
+                $cleanTr = $this->cleanTransliteration($a['tr']);
 
                 Ayat::updateOrCreate(
-                    ['ayat_id_api' => $ayatAPI['id']],
+                    ['ayat_id_api' => $a['id']],
                     [
-                        'surah_id'   => $surah->id,
-                        'nomor'      => $ayatAPI['nomor'],
-                        'ar'         => $ayatAPI['ar'],
-                        'tr'         => $ayatAPI['tr'],
-                        'idn'        => $ayatAPI['idn']
+                        'surah_id' => $surah->id,
+                        'nomor'    => $a['nomor'],
+                        'ar'       => $a['ar'],
+                        'tr'       => $cleanTr,
+                        'idn'      => $a['idn']
                     ]
                 );
             }
@@ -160,7 +190,7 @@ class AyatController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+                'message' => 'Kesalahan: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -169,18 +199,19 @@ class AyatController extends Controller
     {
         $hasil = [];
 
-        for ($i = 8; $i <= 114; $i++) {
-            $response = $this->syncAyatSurah($i);
+        for ($i = 1; $i <= 114; $i++) {
+            $res = $this->syncAyatSurah($i);
+
             $hasil[] = [
                 'surah'  => $i,
-                'status' => $response->original['status'],
-                'message'=> $response->original['message']
+                'status' => $res->original['status'],
+                'message'=> $res->original['message']
             ];
         }
 
         return response()->json([
             'status' => true,
-            'message' => 'Sinkronisasi surah 8–114 selesai',
+            'message' => 'Sinkronisasi surah 1–114 selesai',
             'detail' => $hasil
         ], 200);
     }

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Ayat;
 use App\Models\Surah;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class SurahController extends Controller
 {
@@ -18,19 +20,64 @@ class SurahController extends Controller
 
     public function show($id)
     {
-        $surah = Surah::find($id);
+        $surah = Surah::with(['ayat' => function($q){ $q->orderBy('nomor'); }])->where('nomor', $id)->first();
 
         if (!$surah) {
             return response()->json([
-                'status' => false,
                 'message' => 'Surah tidak ditemukan'
             ], 404);
         }
 
-        return response()->json([
-            'status' => true,
-            'data' => $surah
-        ], 200);
+        $result = [
+            'nomor' => (int) $surah->nomor,
+            'nama' => $surah->nama_arab ?? $surah->nama ?? null,
+            'jumlah_ayat' => (int) $surah->jumlah_ayat,
+            'nama_latin' => $surah->nama_latin,
+            'arti' => $surah->arti,
+            'tempat_turun' => $surah->tempat_turun,
+            'deskripsi' => $surah->deskripsi,
+            'audio' => $surah->audio,
+            'ayat' => $surah->ayat->map(function($a) use ($surah) {
+                return [
+                    'id' => $a->id,
+                    'ayat_id_api' => $a->ayat_id_api ?? null,
+                    'surah' => (int) $surah->nomor,
+                    'nomor' => (int) $a->nomor,
+                    'ar' => $a->ar,
+                    'tr' => $a->tr,
+                    'idn' => $a->idn
+                ];
+            })->values()->all()
+        ];
+
+        $next = Surah::where('nomor', '>', $surah->nomor)->orderBy('nomor')->first();
+        $prev = Surah::where('nomor', '<', $surah->nomor)->orderBy('nomor', 'desc')->first();
+
+        $result['surat_selanjutnya'] = $next ? [
+            'id' => $next->id,
+            'nomor' => (int)$next->nomor,
+            'nama' => $next->nama_arab ?? $next->nama ?? null,
+            'nama_latin' => $next->nama_latin,
+            'jumlah_ayat' => (int)$next->jumlah_ayat,
+            'tempat_turun' => $next->tempat_turun,
+            'arti' => $next->arti,
+            'deskripsi' => $next->deskripsi,
+            'audio' => $next->audio
+        ] : false;
+
+        $result['surat_sebelumnya'] = $prev ? [
+            'id' => $prev->id,
+            'nomor' => (int)$prev->nomor,
+            'nama' => $prev->nama_arab ?? $prev->nama ?? null,
+            'nama_latin' => $prev->nama_latin,
+            'jumlah_ayat' => (int)$prev->jumlah_ayat,
+            'tempat_turun' => $prev->tempat_turun,
+            'arti' => $prev->arti,
+            'deskripsi' => $prev->deskripsi,
+            'audio' => $prev->audio
+        ] : false;
+
+        return response()->json($result, 200, [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
     public function store(Request $request)

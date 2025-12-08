@@ -36,4 +36,9 @@ class Surah extends Model
             }
         });
     }
+
+    public function ayat()
+    {
+        return $this->hasMany(Ayat::class, 'surah_id')->orderBy('nomor');
+    }
 }
