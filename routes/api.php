@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AyatController;
 use App\Http\Controllers\Api\DoaController;
+use App\Http\Controllers\Api\HadistController;
 use App\Http\Controllers\Api\JenisHadistController;
 use App\Http\Controllers\Api\SurahController;
 use Illuminate\Http\Request;
@@ -31,6 +32,7 @@ Route::get('/sync-ayat-semua', [AyatController::class, 'syncSemuaSurah']);
 
 Route::get('/doa', [DoaController::class, 'index']);
 Route::post('/doa', [DoaController::class, 'store']);
+Route::get('/doa/acak', [DoaController::class, 'acak']);
 Route::get('/doa/{id}', [DoaController::class, 'show']);
 Route::put('/doa/{id}', [DoaController::class, 'update']);
 Route::delete('/doa/{id}', [DoaController::class, 'destroy']);
@@ -40,3 +42,11 @@ Route::post('/jenis-hadist', [JenisHadistController::class, 'store']);
 Route::get('/jenis-hadist/{id}', [JenisHadistController::class, 'show']);
 Route::put('/jenis-hadist/{id}', [JenisHadistController::class, 'update']);
 Route::delete('/jenis-hadist/{id}', [JenisHadistController::class, 'destroy']);
+
+Route::get('/hadist', [HadistController::class, 'index']);
+Route::post('/hadist', [HadistController::class, 'store']);
+Route::get('/hadist/acak', [HadistController::class, 'acak']);
+Route::get('/hadist/{id}', [HadistController::class, 'show']);
+Route::put('/hadist/{id}', [HadistController::class, 'update']);
+Route::delete('/hadist/{id}', [HadistController::class, 'destroy']);
+

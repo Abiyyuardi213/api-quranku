@@ -100,4 +100,17 @@ class DoaController extends Controller
             'message' => 'Doa berhasil dihapus'
         ], 200);
     }
+
+    public function acak()
+    {
+        $data = Doa::inRandomOrder()
+            ->limit(5)
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => '5 doa acak',
+            'data' => $data
+        ], 200);
+    }
 }
