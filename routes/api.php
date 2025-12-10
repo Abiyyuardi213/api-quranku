@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AyatController;
+use App\Http\Controllers\Api\BookmarkController;
 use App\Http\Controllers\Api\DoaController;
 use App\Http\Controllers\Api\HadistController;
 use App\Http\Controllers\Api\JenisHadistController;
@@ -50,3 +51,11 @@ Route::get('/hadist/{id}', [HadistController::class, 'show']);
 Route::put('/hadist/{id}', [HadistController::class, 'update']);
 Route::delete('/hadist/{id}', [HadistController::class, 'destroy']);
 
+Route::get('/bookmark', [BookmarkController::class, 'index']);
+Route::post('/bookmark', [BookmarkController::class, 'store']);
+Route::get('/bookmark/{id}', [BookmarkController::class, 'show']);
+Route::put('/bookmark/{id}', [BookmarkController::class, 'update']);
+Route::delete('/bookmark/{id}', [BookmarkController::class, 'destroy']);
+
+Route::get('/bookmark/surah/{surahNumber}', [BookmarkController::class, 'bySurah']);
+Route::get('/bookmark-terbaru', [BookmarkController::class, 'latest']);
