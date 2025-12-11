@@ -1,17 +1,29 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AyatController;
 use App\Http\Controllers\Api\BookmarkController;
 use App\Http\Controllers\Api\DoaController;
 use App\Http\Controllers\Api\HadistController;
 use App\Http\Controllers\Api\JenisHadistController;
 use App\Http\Controllers\Api\SurahController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::post('/logout', [AuthController::class, 'logout']);
+
+    Route::get('/bookmark', [BookmarkController::class, 'index']);
+    Route::post('/bookmark', [BookmarkController::class, 'store']);
+    Route::get('/bookmark/{id}', [BookmarkController::class, 'show']);
+    Route::put('/bookmark/{id}', [BookmarkController::class, 'update']);
+    Route::delete('/bookmark/{id}', [BookmarkController::class, 'destroy']);
+    Route::get('/bookmark/surah/{surahNumber}', [BookmarkController::class, 'bySurah']);
+    Route::get('/bookmark-terbaru', [BookmarkController::class, 'latest']);
+});
 
 Route::get('/surah', [SurahController::class, 'index']);
 Route::get('/surah/{id}', [SurahController::class, 'show']);
@@ -22,13 +34,12 @@ Route::get('/sync-surah', [SurahController::class, 'syncSurahFromApi']);
 
 Route::get('/ayat', [AyatController::class, 'index']);
 Route::get('/ayat/{id}', [AyatController::class, 'show']);
-
 Route::get('/surah/{id}/ayat', [AyatController::class, 'bySurah']);
 
 Route::post('/ayat', [AyatController::class, 'store']);
-Route::put('/ayat/{id}', [AyatController::class,     'update']);
+Route::put('/ayat/{id}', [AyatController::class, 'update']);
 Route::delete('/ayat/{id}', [AyatController::class, 'destroy']);
-Route::get('sync-ayat-surah/{nomor}', [AyatController::class, 'syncAyatSurah']);
+Route::get('/sync-ayat-surah/{nomor}', [AyatController::class, 'syncAyatSurah']);
 Route::get('/sync-ayat-semua', [AyatController::class, 'syncSemuaSurah']);
 
 Route::get('/doa', [DoaController::class, 'index']);
@@ -50,12 +61,3 @@ Route::get('/hadist/acak', [HadistController::class, 'acak']);
 Route::get('/hadist/{id}', [HadistController::class, 'show']);
 Route::put('/hadist/{id}', [HadistController::class, 'update']);
 Route::delete('/hadist/{id}', [HadistController::class, 'destroy']);
-
-Route::get('/bookmark', [BookmarkController::class, 'index']);
-Route::post('/bookmark', [BookmarkController::class, 'store']);
-Route::get('/bookmark/{id}', [BookmarkController::class, 'show']);
-Route::put('/bookmark/{id}', [BookmarkController::class, 'update']);
-Route::delete('/bookmark/{id}', [BookmarkController::class, 'destroy']);
-
-Route::get('/bookmark/surah/{surahNumber}', [BookmarkController::class, 'bySurah']);
-Route::get('/bookmark-terbaru', [BookmarkController::class, 'latest']);
