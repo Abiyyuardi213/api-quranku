@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthController extends Controller
 {
@@ -24,44 +26,43 @@ class AuthController extends Controller
         ]);
 
         return response()->json([
-            'status' => true,
+            'status'  => true,
             'message' => 'User registered successfully',
-            'data' => $user
+            'user'    => $user
         ]);
     }
 
     public function login(Request $request)
     {
-        $request->validate([
-            'email'    => 'required|string|email',
-            'password' => 'required|string'
-        ]);
+        $credentials = $request->only('email', 'password');
 
-        $user = User::where('email', $request->email)->first();
-
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Invalid credentials'
-            ], 401);
+        try {
+            if (! $token = JWTAuth::attempt($credentials)) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Invalid credentials'
+                ], 401);
+            }
+        } catch (JWTException $e) {
+            return response()->json(['error' => 'Could not create token'], 500);
         }
 
-        $token = $user->createToken('mobile')->plainTextToken;
-
         return response()->json([
-            'status' => true,
-            'message' => 'Login success',
-            'token' => $token,
-            'user' => $user
+            'status'      => true,
+            'message'     => 'Login success',
+            'token'       => $token,
+            'token_type'  => 'bearer',
+            'expires_in'  => auth('api')->factory()->getTTL() * 60,
+            'user'        => auth('api')->user()
         ]);
     }
 
-    public function logout(Request $request)
+    public function logout()
     {
-        $request->user()->currentAccessToken()->delete();
+        auth('api')->logout();
 
         return response()->json([
-            'status' => true,
+            'status'  => true,
             'message' => 'Logged out successfully'
         ]);
     }
