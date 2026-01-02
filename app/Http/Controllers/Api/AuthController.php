@@ -37,7 +37,7 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
 
         try {
-            if (! $token = JWTAuth::attempt($credentials)) {
+            if (! $token = auth('api')->setTTL(7 * 24 * 60)->attempt($credentials)) {
                 return response()->json([
                     'status'  => false,
                     'message' => 'Invalid credentials'
